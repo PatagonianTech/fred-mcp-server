@@ -20,7 +20,9 @@ https://github.com/user-attachments/assets/66c7f3ad-7b0e-4930-b1c5-a675a7eb1e09
 
 ## Installation
 
-### Installing via Smithery
+### Option 1: MCP Server (Original)
+
+#### Installing via Smithery
 
 To install Federal Reserve Economic Data Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@stefanoamorelli/fred-mcp-server):
 
@@ -28,7 +30,7 @@ To install Federal Reserve Economic Data Server for Claude Desktop automatically
 npx -y @smithery/cli install @stefanoamorelli/fred-mcp-server --client claude
 ```
 
-### Manual Installation
+#### Manual Installation
 
 1.  Clone the repository:
     ```bash
@@ -43,6 +45,32 @@ npx -y @smithery/cli install @stefanoamorelli/fred-mcp-server --client claude
     ```bash
     pnpm build
     ```
+
+### Option 2: HTTPS API Server (New! 🚀)
+
+Deploy as a standalone HTTPS API server with Docker and Nginx:
+
+```bash
+# Quick start for development
+./scripts/quick-start.sh
+
+# Or step by step:
+cp .env.example .env
+# Edit .env with your FRED API key
+./scripts/setup-ssl.sh self-signed
+docker-compose up -d
+```
+
+Access your API at `https://localhost/`
+
+**Features:**
+- 🔒 HTTPS with SSL certificates (Let's Encrypt or self-signed)
+- 🐳 Docker containerized deployment
+- 🔄 Nginx reverse proxy with rate limiting
+- 📊 REST API endpoints for all FRED tools
+- 🔍 Health checks and monitoring
+
+For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Configuration
 
