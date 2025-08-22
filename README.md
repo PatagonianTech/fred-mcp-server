@@ -46,9 +46,9 @@ npx -y @smithery/cli install @stefanoamorelli/fred-mcp-server --client claude
     pnpm build
     ```
 
-### Option 2: HTTPS API Server (New! 🚀)
+### Option 2: MCP Server over HTTPS (New! 🚀)
 
-Deploy as a standalone HTTPS API server with Docker and Nginx:
+Deploy the MCP server accessible over HTTPS with Docker and Nginx:
 
 ```bash
 # Quick start for development
@@ -61,14 +61,59 @@ cp .env.example .env
 docker-compose up -d
 ```
 
-Access your API at `https://localhost/`
+Access your MCP server at `https://localhost/mcp`
 
 **Features:**
 - 🔒 HTTPS with SSL certificates (Let's Encrypt or self-signed)
 - 🐳 Docker containerized deployment
 - 🔄 Nginx reverse proxy with rate limiting
-- 📊 REST API endpoints for all FRED tools
+- 🔌 MCP server accessible over HTTP transport (JSON-RPC)
 - 🔍 Health checks and monitoring
+- 🌐 Compatible with web-based MCP clients
+
+#### Testing the MCP Server over HTTP
+
+**List available tools:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```
+
+**Search for unemployment data:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_search","arguments":{"search_text":"unemployment","limit":5}},"id":2}'
+```
+
+**Get unemployment rate data:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_get_series","arguments":{"series_id":"UNRATE","limit":12}},"id":3}'
+```
+
+**Browse economic categories:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_browse","arguments":{"browse_type":"categories"}},"id":4}'
+```
+
+#### Using with Postman
+
+1. **Method**: POST
+2. **URL**: `https://localhost/mcp`
+3. **Headers**:
+   - `Content-Type: application/json`
+   - `Accept: application/json, text/event-stream`
+4. **Body** (raw JSON): Use any of the JSON-RPC requests above
+5. **Settings**: Disable SSL certificate verification
 
 For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
