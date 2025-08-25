@@ -105,6 +105,14 @@ curl -k -X POST https://localhost/mcp \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_browse","arguments":{"browse_type":"categories"}},"id":4}'
 ```
 
+**Get US GDP data (percent change):**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_get_series","arguments":{"series_id":"GDP","limit":20,"units":"pch"}},"id":5}'
+```
+
 #### Using with Postman
 
 1. **Method**: POST
@@ -114,6 +122,40 @@ curl -k -X POST https://localhost/mcp \
    - `Accept: application/json, text/event-stream`
 4. **Body** (raw JSON): Use any of the JSON-RPC requests above
 5. **Settings**: Disable SSL certificate verification
+
+#### Testing Locally with ngrok
+
+To expose your local MCP server publicly for testing:
+
+```bash
+# 1. Build and start the local MCP server
+npm run build
+npm run start:http
+
+# 2. In another terminal, expose it with ngrok
+ngrok http 3000
+```
+
+Then test with the ngrok URL:
+```bash
+# List tools
+curl -X POST https://YOUR-NGROK-URL.ngrok.io/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+
+# Get US GDP data
+curl -X POST https://YOUR-NGROK-URL.ngrok.io/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_get_series","arguments":{"series_id":"GDP","limit":20,"units":"pch"}},"id":2}'
+```
+
+**Popular GDP Series IDs:**
+- `GDP` - Gross Domestic Product (levels)
+- `GDPC1` - Real GDP (chained dollars)  
+- `GDPPOT` - Real Potential GDP
+- Use `"units":"pc1"` for percent change from year ago
 
 For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
