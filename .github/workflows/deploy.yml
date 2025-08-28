@@ -1,0 +1,54 @@
+name: Build and Deploy MCP Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install frontend dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Build frontend
+        run: NODE_OPTIONS="--max-old-space-size=4096" npm run build
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Extract short Git SHA
+        id: vars
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Docker login to ACR
+        run: |
+          echo "${{ secrets.REPO_KEY }}" | docker login amarmcp.azurecr.io --username amarmcp --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build -f Dockerfile.http -t amarmcp.azurecr.io/mcp-server:${{ steps.vars.outputs.sha_short }} .
+
+      - name: Push Docker image
+        run: |
+          docker push amarmcp.azurecr.io/mcp-server:${{ steps.vars.outputs.sha_short }}
+
+      - name: Update Azure Container App image
+        run: |
+          az containerapp update \
+            --name mcpserver \
+            --resource-group amar_dev_rg \
+            --image amarmcp.azurecr.io/mcp-server:${{ steps.vars.outputs.sha_short }} 
