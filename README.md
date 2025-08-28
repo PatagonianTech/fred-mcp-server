@@ -20,7 +20,9 @@ https://github.com/user-attachments/assets/66c7f3ad-7b0e-4930-b1c5-a675a7eb1e09
 
 ## Installation
 
-### Installing via Smithery
+### Option 1: MCP Server (Original)
+
+#### Installing via Smithery
 
 To install Federal Reserve Economic Data Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@stefanoamorelli/fred-mcp-server):
 
@@ -28,7 +30,7 @@ To install Federal Reserve Economic Data Server for Claude Desktop automatically
 npx -y @smithery/cli install @stefanoamorelli/fred-mcp-server --client claude
 ```
 
-### Manual Installation
+#### Manual Installation
 
 1.  Clone the repository:
     ```bash
@@ -43,6 +45,119 @@ npx -y @smithery/cli install @stefanoamorelli/fred-mcp-server --client claude
     ```bash
     pnpm build
     ```
+
+### Option 2: MCP Server over HTTPS (New! 🚀)
+
+Deploy the MCP server accessible over HTTPS with Docker and Nginx:
+
+```bash
+# Quick start for development
+./scripts/quick-start.sh
+
+# Or step by step:
+cp .env.example .env
+# Edit .env with your FRED API key
+./scripts/setup-ssl.sh self-signed
+docker-compose up -d
+```
+
+Access your MCP server at `https://localhost/mcp`
+
+**Features:**
+- 🔒 HTTPS with SSL certificates (Let's Encrypt or self-signed)
+- 🐳 Docker containerized deployment
+- 🔄 Nginx reverse proxy with rate limiting
+- 🔌 MCP server accessible over HTTP transport (JSON-RPC)
+- 🔍 Health checks and monitoring
+- 🌐 Compatible with web-based MCP clients
+
+#### Testing the MCP Server over HTTP
+
+**List available tools:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+```
+
+**Search for unemployment data:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_search","arguments":{"search_text":"unemployment","limit":5}},"id":2}'
+```
+
+**Get unemployment rate data:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_get_series","arguments":{"series_id":"UNRATE","limit":12}},"id":3}'
+```
+
+**Browse economic categories:**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_browse","arguments":{"browse_type":"categories"}},"id":4}'
+```
+
+**Get US GDP data (percent change):**
+```bash
+curl -k -X POST https://localhost/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_get_series","arguments":{"series_id":"GDP","limit":20,"units":"pch"}},"id":5}'
+```
+
+#### Using with Postman
+
+1. **Method**: POST
+2. **URL**: `https://localhost/mcp`
+3. **Headers**:
+   - `Content-Type: application/json`
+   - `Accept: application/json, text/event-stream`
+4. **Body** (raw JSON): Use any of the JSON-RPC requests above
+5. **Settings**: Disable SSL certificate verification
+
+#### Testing Locally with ngrok
+
+To expose your local MCP server publicly for testing:
+
+```bash
+# 1. Build and start the local MCP server
+npm run build
+npm run start:http
+
+# 2. In another terminal, expose it with ngrok
+ngrok http 3000
+```
+
+Then test with the ngrok URL:
+```bash
+# List tools
+curl -X POST https://YOUR-NGROK-URL.ngrok.io/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
+
+# Get US GDP data
+curl -X POST https://YOUR-NGROK-URL.ngrok.io/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"fred_get_series","arguments":{"series_id":"GDP","limit":20,"units":"pch"}},"id":2}'
+```
+
+**Popular GDP Series IDs:**
+- `GDP` - Gross Domestic Product (levels)
+- `GDPC1` - Real GDP (chained dollars)  
+- `GDPPOT` - Real Potential GDP
+- Use `"units":"pc1"` for percent change from year ago
+
+For complete deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Configuration
 
