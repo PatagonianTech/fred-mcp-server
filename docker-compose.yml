@@ -13,7 +13,7 @@ services:
     expose:
       - "3000"
     networks:
-      - fred-network
+      - amar-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
@@ -23,7 +23,7 @@ services:
       start_period: 40s
 
   # Nginx Reverse Proxy with SSL
-  nginx:
+  fred-service:
     image: nginx:alpine
     ports:
       - "80:80"
@@ -35,7 +35,7 @@ services:
     depends_on:
       - fred-server
     networks:
-      - fred-network
+      - amar-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
@@ -54,8 +54,8 @@ services:
       - ssl-auto # Only run when ssl-auto profile is active
 
 networks:
-  fred-network:
-    driver: bridge
+  amar-network:
+    external: true
 
 volumes:
   ssl-certs:
