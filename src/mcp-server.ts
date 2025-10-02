@@ -78,7 +78,7 @@ export class MCPServer {
   private async sendMessages(transport: StreamableHTTPServerTransport) {
     try {
       await transport.send({
-        jsonrpc: "2.0",
+        jsonrpc: JSON_RPC,
         method: "sse/connection",
         params: { message: "Stream started" }
       })
@@ -93,7 +93,7 @@ export class MCPServer {
 
         try {
           await transport.send({
-            jsonrpc: "2.0",
+            jsonrpc: JSON_RPC,
             method: "sse/message",
             params: { data: message }
           })
