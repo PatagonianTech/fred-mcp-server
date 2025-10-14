@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
-import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
 import { createServer } from "./index.js";
+import { MCPServer } from "./mcp-server.js";
 
 const app = express();
 app.use(express.json());
@@ -12,33 +12,14 @@ const PORT = process.env.PORT || 3001;
  */
 function createHttpServer() {
   const server = createServer();
+  const mcpServer = new MCPServer(server);
   
   app.post('/mcp', async (req: Request, res: Response) => {
-    try {
-      const transport = new StreamableHTTPServerTransport({
-        sessionIdGenerator: undefined, // Stateless mode
-      });
-      
-      res.on('close', () => {
-        transport.close();
-        server.close();
-      });
-      
-      await server.connect(transport);
-      await transport.handleRequest(req, res, req.body);
-    } catch (error) {
-      console.error('Error handling MCP request:', error);
-      if (!res.headersSent) {
-        res.status(500).json({
-          jsonrpc: '2.0',
-          error: {
-            code: -32603,
-            message: 'Internal server error',
-          },
-          id: null,
-        });
-      }
-    }
+    await mcpServer.handlePostRequest(req, res);
+  });
+
+  app.get('/mcp', async (req: Request, res: Response) => {
+    await mcpServer.handleGetRequest(req, res);
   });
 
   app.get('/health', (_req: Request, res: Response) => {
